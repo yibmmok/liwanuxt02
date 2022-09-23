@@ -1,4 +1,9 @@
 <script setup lang="ts">
+	/*********************************************************
+	prog name: banner, author: James Lin, date: 2022/09/11
+	todo: 增加 proglink的檢查 auth功能, 若無權限, 跳到 NoAuth網頁
+	**********************************************************/	
+
 	import { ref, reactive } from "vue"
 
 	const props = defineProps({

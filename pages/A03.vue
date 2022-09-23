@@ -38,6 +38,7 @@
 		let url = window.sessionStorage.getItem('liwaAPIsvr') + "/A03_getProgs.php?siteID=" + siteID + '&uGroupID=' + uGroupID + '&userID=' + userID
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL
+		console.log('liwaData =', liwaData.value)
 	}
 
 	const jumpLink = (slink) => {

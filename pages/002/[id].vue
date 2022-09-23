@@ -7,21 +7,24 @@
 	import { useFetch, createFetch, useTitle } from "@vueuse/core"
 	import banner from "../../components/banner"
 	import liwaMsg from "../../components/liwaMsg.vue"
-	import liwaConfig from "../../components/liwaConfig.vue"
+	import { IconPlusLg } from '@iconify-prerendered/vue-bi'
 
 	const mainID = ref('')
 	const progName = ref('使用者列表')
 	const proglink = ref('/002')
 	const detailFlg = ref(true)
 	const detailName = ref('')
+	const siteID = ref('')
 	const liwaData = ref({})
 	const liwaDetail1 = ref([])
 	const stitle = ref('')
 	const submitted = ref(false)
 	const imgInput = ref(null)
+	const isMsg = ref(false)
+	const isConfig = ref(false)	
 
 	const loadData = async () => {
-		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/002_haveDetail.php?mainID=" + mainID.value
+		let url= window.sessionStorage.getItem('liwaAPIsvr') + "/002_haveDetail.php?siteID="+siteID.value+"&mainID=" + mainID.value
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL[0]
 		liwaData.value.action = 'edit'
@@ -85,12 +88,10 @@
 			'username': '',
 			'nickname': '',
 			'gender': '先生',
-
 			'uGroupID': '',
 			'uGroupName': '',
 			'iAuth': 1,
 			'isTop': 0,
-
 			'usermail': '',
 			'birthday': '',
 			'zip': '',
@@ -122,20 +123,24 @@
 	        body: datastr
 	      }
 	    })
-	    const { data } = await useMyFetch('002_edit3.php').post().json()
-	    mainID.value = data.value.key
-	    console.log('mainID =', mainID.value)
-	    if (liwaData.value.action == 'add') window.location.href = '/002/' + mainID.value
+	    const { data } = await useMyFetch('002_edit.php').post().json()
+	    if (!data.value.message) {
+		    mainID.value = data.value.key
+		    if (liwaData.value.action == 'add') {
+		    	window.location.href = '/002/' + mainID.value
+		    }
+		    liwaData.value.action = 'view'	
+	    } else {
+	    	showMsg('存檔錯誤', data.value.message, 1)
+	    }
 	}
 
-	// 訊息對話盒及設定對話盒相關 starts
-	const isMsg = ref(false)
+	// 訊息對話盒及設定對話盒相關 starts	
 	const objMsg = ref({
 		title: '',
 		body: '',
 		modalType: ''
 	})
-	const isConfig = ref(false)
 
 	const showMsg = (sTitle, sBody, iType = 1) => {
   		objMsg.value.title = sTitle
@@ -152,7 +157,7 @@
 		alert("Press the Confirm button")
 		isMsg.value = false
 	}
-
+	
 	const showConfig = () => {
 		isConfig.value = true
 	}
@@ -160,7 +165,7 @@
 	const hideConfig = () => {
 		isConfig.value = false
 	}
-
+	// 訊息對話盒及設定對話盒相關 ends
 	const iconSrc = computed(() => {
 		let iconHead = liwaData.value.iconPath.substr(0, 5)
 		let AA = liwaData.value.iconPath
@@ -174,6 +179,7 @@
 	// 訊息對話盒及設定對話盒相關 ends
 
 	onMounted(() => {
+		siteID.value = window.sessionStorage.getItem('liwaSiteID')
     	let compName = window.sessionStorage.getItem('liwaSiteName')
     	const title = useTitle(compName+`- 使用者明細`)
 		// 取得 mainID, 由mainID取得
@@ -208,24 +214,15 @@
 	<div class="barPanel w-[95%] h-12 rounded-3xl mt-2 ml-4 mb-2 px-1 flex flex-row justify-between">
 		<div class="w-1/3">
 			<div class="top-icon add ml-4 -mt-1" @click="jumpAdd()">
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="#fee" viewBox="-1 -1 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke="#fee" stroke-linejoin="round" stroke-width="6" d="M12 4v16m8-8H4" />
-				</svg>
+				<IconPlusLg class="w-7 h-7 text-white font-bold" />
 			</div>			
 		</div>
 		<div class="w-1/3 text-center">
 			{{ stitle }}
 		</div>
 		<div class="w-1/3 flex flex-row justify-end">
-            <div class="top-icon config -mt-1 mr-4"
-                 @click="showConfig()"
-            >
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="-1 -1 20 20" fill="#ffeeee">
-					<g style="">
-					<path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM7 13a4 4 0 100-6 4 4 0 000 6z" clip-rule="evenodd" />
-					</g>
-				</svg>             
-            </div>			
+			<!-- 設定按鈕 -->
+
 		</div>
 	</div>
 	<div class="w-full lg:max-w-lg">
@@ -332,6 +329,14 @@
 		          type="select"
 		          :options="['準會員', '正式成員']"
 		        />
+		        <FormKit
+		        	name="iAuth"
+		        	label="預設權限*"
+		        	type="number"
+		        	min="1"
+		        	max="9"
+		        	validation="required"
+		        />			        
 		        <div class="flex flex-col lg:flex-row justify-start lg:justify-between">
 		        	<div class="w-full lg:w-[50%]">
 				        <FormKit

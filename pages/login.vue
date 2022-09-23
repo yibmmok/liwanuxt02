@@ -5,7 +5,7 @@
 
   **********************************************************/
 	import { ref, onMounted} from "vue"
-	import { useFetch, createFetch, useStorage,  } from "@vueuse/core"
+	import { useFetch, createFetch, useStorage } from "@vueuse/core"
 
 	const submitted = ref(false)
 	const liwaData = ref({})
@@ -18,7 +18,7 @@
 		liwaData.value.jwttoken = ((jwt.value === 'undefined') || (jwt.value === ""))? '' : jwt.value
 		let datastr = JSON.stringify(liwaData.value)
 		const useMyFetch = createFetch({
-		  baseUrl: 'http://172.18.2.5',
+		  baseUrl: 'http://172.18.2.13',
 		  options: {},
 		  fetchOptions: {
 		    mode: 'cors',
@@ -34,12 +34,25 @@
 		if (res.value.message == "") {
 			// Login 成功, 先設定 sessionStorage
 			window.localStorage.setItem('liwaJWT', res.value.token)
+			window.sessionStorage.setItem('liwaUserID', res.value.userID)
+			window.sessionStorage.setItem('liwaUserName', res.value.username)
+			window.sessionStorage.setItem('liwaIconPath', res.value.iconPath)
+/*
 			useStorage('liwaUserID', res.value.userID, sessionStorage)
 			useStorage('liwaUserName', res.value.username, sessionStorage)
 			useStorage('liwaIconPath', res.value.iconPath, sessionStorage)
+*/			
 			if (res.value.siteID) {
 				// useStorage('liwaSiteID', res.value.siteID, sessionStorage)
 				window.sessionStorage.setItem('liwaSiteID', res.value.siteID)
+				window.sessionStorage.setItem('liwaSiteIcon', res.value.siteIcon)
+				window.sessionStorage.setItem('liwaSiteName', res.value.siteName)
+				window.sessionStorage.setItem('liwaAuth', res.value.auth)
+				window.sessionStorage.setItem('liwaUGroupID', res.value.uGroupID)
+				window.sessionStorage.setItem('liwaUGroupName', res.value.uGroupName)
+				window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
+				window.sessionStorage.setItem('liwaAPIsvr', res.value.apisvr)
+/*				
 				useStorage('liwaSiteIcon', res.value.siteIcon, sessionStorage)
 				useStorage('liwaSiteName', res.value.siteName, sessionStorage)
 				useStorage('liwaAuth', res.value.auth, sessionStorage)
@@ -47,12 +60,18 @@
 				useStorage('liwaUGroupName', res.value.uGroupName, sessionStorage)
 				useStorage('liwaImgsvr', res.value.imgsvr, sessionStorage)
 				useStorage('liwaAPIsvr', res.value.apisvr, sessionStorage)
+*/
 				//跳到 A03
 				window.location.href=`/A03`
 			} else {
+				window.sessionStorage.setItem('liwaSiteID', 'sys')
+				window.sessionStorage.setItem('liwaImgsvr', res.value.imgsvr)
+				window.sessionStorage.setItem('liwaAPIsvr', res.value.apisvr)
+/*
 				useStorage('liwaSiteID', 'sys', sessionStorage)
 				useStorage('liwaImgsvr', res.value.imgsvr, sessionStorage)
 				useStorage('liwaAPIsvr', res.value.apisvr, sessionStorage)
+*/				
 				// 跳到 Profile
 				window.location.href=`/Profile`
 			}

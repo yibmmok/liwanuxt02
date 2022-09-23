@@ -37,7 +37,7 @@
 </script>
 
 <template>
-<div class="fixed min-h-screen bg-gradient-to-b from-gray-100 to-gray-400 opacity-90 flex justify-center items-center bottom-0 left-1 w-full h-full" style="z-index:1000">
+<div class="w-full h-full min-h-screen bg-gradient-to-b from-gray-100 to-gray-400 opacity-90 flex justify-center items-center">
   <div class="bg-white rounded-lg">
   <div class="relative w-96 border-t-8 border-pink-600 rounded-lg flex">
       <div v-if="state.modalType==2" class="absolute w-8 h-8 bg-white cursor-pointer top-2 right-2">

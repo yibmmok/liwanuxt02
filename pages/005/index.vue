@@ -10,15 +10,23 @@
 	import { useShowmode } from "../../composables/use-showmode"
 	import liwaPages from "../../components/liwaPages"
 	import liwaMsg from "../../components/liwaMsg.vue"
+	import { IconPlusLg, IconSearch, IconTrash, IconCheck, IconDash, IconStar, IconStarFill, IconX } from '@iconify-prerendered/vue-bi'
 
 	const error = ref('')
 	const liwaData = ref({})
+	const liwaDetail1 = ref([])  // 搜尋對話盒的公告類別過濾
 	const progName = ref('公告列表')
 	const proglink = ref('/005')
 	const detailFlg = ref(false)
 	const detailKey = ref('')
 	const isFilter = ref(false)
-	const filters = ref({})
+	const filters = ref({
+		startDate:'',
+		endDate:'',
+		shortItems:'',
+		itemTypeID:'',
+		status:-1
+	})
 	const mainID = ref('')
 	const orderCol = ref('shortItems')
 	const sortDir = ref('asc')
@@ -43,13 +51,18 @@
 	const totalPage = ref(1)
 
 	/* filterPanel setup starts */
-	const rolesOption = ['', '準會員', '正式會員']
+	const statusOption = [
+		{label:'', value:-1}, 
+		{label:'已上架公告', value:1}, 
+		{label:'下架公告', value:0}
+	]
 
 	/* filterPanel setup ends */
 
 	const fetchData = async () => {
 		let APIsvr = window.sessionStorage.getItem('liwaAPIsvr')
 		let url = `${APIsvr}/005_havelist.php?siteID=${filters.value.siteID}&userID=${filters.value.userID}&mainID=${mainID.value}&filterShortItems=${filters.value.shortItems}&filterStartDate=${filters.value.startDate}&filterEndDate=${filters.value.endDate}&filterItemTypeID=${filters.value.itemTypeID}&filterStatus=${filters.value.status}&orderCol=${orderCol.value}&sortDir=${sortDir.value}&page=${page.value}&pageSize=${pageSize.value}`
+	
 		const data = await useFetch(url, {method: 'GET'}, {refetch: true}).get().json()
 		liwaData.value = data.data.value.arrSQL
 		totalPage.value = data.data.value.totalPage
@@ -61,12 +74,30 @@
 				if (res.length > 0) res[0].isChecked = 1	
 			})
 		}
-
+		
 		// 每次fetchData 後都要把filters存下來
-		saveFilters()		
+		// saveFilters()		
 	}
 
+	const loadDetail1 = async () => {
+		// 取得公告類別列表
+		let url1 = window.sessionStorage.getItem('liwaAPIsvr') + "/005_haveItemType.php?siteID="+window.sessionStorage.getItem('liwaSiteID')
+		const detail1 = await useFetch(url1, {method: 'GET'}, {refetch: true}).get().json()
+		let arrDetail1 = detail1.data.value.arrSQL
+		let arrTmp = []
+		for (let i=0; i<arrDetail1.length; i++) {
+			let objItem = {
+				label:arrDetail1[i].label,
+				value:arrDetail1[i].value,
+				iAuth:arrDetail1[i].iAuth
+			}
+			arrTmp.push(objItem)
+		}
+		liwaDetail1.value = arrTmp
+	}	
+
 	const reload = () => {
+		refetchFilters()
 		fetchData()
 	}
 
@@ -182,6 +213,7 @@
 	    const { data } = await useMyFetch('005_edit.php').post().json()
 	    if (!data.value.message) {
 	    	// window.location.href = '/005/'
+	    	reload()
 	    } else {
 	    	showMsg('', data.value.message, 1)
 	    }	
@@ -195,28 +227,26 @@
 	}
 
 	const refetchFilters = () => {
-		let tmpFilters = window.sessionStorage.getItem('liwafilter_005')
 		let siteID = window.sessionStorage.getItem('liwaSiteID')
 		let userID = window.sessionStorage.getItem('liwaUserID')
-		if ((tmpFilters == "") || (tmpFilters == null)) {
-			// sessionStorage內的liwafilters有值
-			filters.value.siteID = siteID
-			filters.value.userID = userID
-			filters.value.shortItems = ''
-			filters.value.itemTypeID = ''
-			filters.value.startDate = ''
-			filters.value.endDate = ''
-			filters.value.status = 0
-			filters.value.orderCol = orderCol.value
-			filters.value.sortDir = sortDir.value
-			filters.value.page = page.value
-			filters.value.pageSize = pageSize.value
-			let datastr = JSON.stringify(filters.value)
-			window.sessionStorage.setItem('liwafilter_005', datastr)
-		} else {
-			let arrFilters = JSON.parse(tmpFilters)
-			filters.value = arrFilters
-		}
+		filters.value.siteID = siteID
+		filters.value.userID = userID
+		filters.value.shortItems = ''
+		filters.value.itemTypeID = ''
+		filters.value.startDate = ''
+		filters.value.endDate = ''
+		filters.value.status = -1
+		filters.value.orderCol = orderCol.value
+		filters.value.sortDir = sortDir.value
+		filters.value.page = page.value
+		filters.value.pageSize = pageSize.value
+		let datastr = JSON.stringify(filters.value)
+		window.sessionStorage.setItem('liwafilter_005', datastr)
+	}
+
+	const runFilter = () => {
+		fetchData()
+		isFilter.value = false
 	}	
 
 	// 設定 filters 內容 ends
@@ -241,18 +271,13 @@
 	onMounted(() => {
     	let compName = window.sessionStorage.getItem('liwaSiteName')
     	const title = useTitle(compName+`- 公告列表`)
-		// 先設定filter條件
-		refetchFilters()
+		refetchFilters()	
 		fetchData()
-
+		loadDetail1()
 	})
 
-	// defineExpose({
-	// 	reload,
-	// })
-
 	definePageMeta({
-	  title: 'LiwaSite 公告管理',
+	  title: '公告列表',
 	  layout: "default",
 	})	
 </script>
@@ -267,30 +292,14 @@
 <div v-if="error">{{ error }}</div>
 <div class="w-full bg-slate-200 px-4 py-2">
 	<div class="barPanel h-12 rounded-3xl ml-4 mb-2 px-1">
-		<div class="top-icon filter ml-4 -mt-1" @click="toggleFilter()">
-			<g class="" style="fill:#FFF;stroke:#FFF;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-				<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-					 viewBox="-50 -50 550 550" style="enable-background:new 0 0 487.95 487.95;" xml:space="preserve" width="30px" height="30px">
-						<path d="M481.8,453l-140-140.1c27.6-33.1,44.2-75.4,44.2-121.6C386,85.9,299.5,0.2,193.1,0.2S0,86,0,191.4s86.5,191.1,192.9,191.1
-							c45.2,0,86.8-15.5,119.8-41.4l140.5,140.5c8.2,8.2,20.4,8.2,28.6,0C490,473.4,490,461.2,481.8,453z M41,191.4
-							c0-82.8,68.2-150.1,151.9-150.1s151.9,67.3,151.9,150.1s-68.2,150.1-151.9,150.1S41,274.1,41,191.4z"/>
-				</svg>
-			</g>
+		<div class="top-icon ml-4 -mt-1 pl-[.125rem] pt-[.125rem]" @click="toggleFilter()">
+			<IconSearch class="w-6 h-6 text-white font-bold" />
 		</div>		
-		<div class="top-icon add ml-2 -mt-1" @click="setMainID('add')">
-			<svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="#fee" viewBox="-1 -1 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke="#fee" stroke-linejoin="round" stroke-width="6" d="M12 4v16m8-8H4" />
-			</svg>
+		<div class="top-icon ml-2 -mt-1 pl-[.125rem] pt-[.125rem]" @click="setMainID('add')">
+			<IconPlusLg class="w-7 h-7 text-white font-bold" />
 		</div>
-		<div class="top-icon ml-2 -mt-1" @click="deleteData">
-			<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 458.5 458.5" style="enable-background:new 0 0 458.5 458.5;" xml:space="preserve" width="30px" height="30px">
-				<g class="" style="fill:#FFF;stroke:#FFF;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-					<path d="M382.078,57.069h-89.78C289.128,25.075,262.064,0,229.249,0S169.37,25.075,166.2,57.069H76.421c-26.938,0-48.854,21.916-48.854,48.854c0,26.125,20.613,47.524,46.429,48.793V399.5c0,32.533,26.467,59,59,59h192.508c32.533,0,59-26.467,59-59V154.717c25.816-1.269,46.429-22.668,46.429-48.793C430.933,78.985,409.017,57.069,382.078,57.069z M229.249,30c16.244,0,29.807,11.673,32.76,27.069h-65.52C199.442,41.673,213.005,30,229.249,30z M354.503,399.501c0,15.991-13.009,29-29,29H132.995c-15.991,0-29-13.009-29-29V154.778c12.244,0,240.932,0,250.508,0V399.501z M382.078,124.778c-3.127,0-302.998,0-305.657,0c-10.396,0-18.854-8.458-18.854-18.854S66.025,87.07,76.421,87.07h305.657c10.396,0,18.854,8.458,18.854,18.854S392.475,124.778,382.078,124.778z"/>
-					<path d="M229.249,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.715-15-15-15c-8.284,0-15,6.716-15,15v173.705	C214.249,385.607,220.965,392.323,229.249,392.323z"/>
-					<path d="M306.671,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.716-15-15-15s-15,6.716-15,15v173.705	C291.671,385.607,298.387,392.323,306.671,392.323z"/>
-					<path d="M151.828,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.716-15-15-15c-8.284,0-15,6.716-15,15v173.705	C136.828,385.607,143.544,392.323,151.828,392.323z"/>
-				</g>
-			</svg>
+		<div class="top-icon ml-2 -mt-1 pl-[.125rem] pt-[.125rem]" @click="deleteData">
+			<IconTrash class="w-7 h-7 text-white font-bold" />
 		</div>
 	</div>	
 	<div v-if="liwaData.length" class="mx-auto my-0 p-2 border-2 relative">
@@ -301,26 +310,15 @@
 			        	<table class="min-w-full divide-x divide-y divide-gray-200 bg-white">
 			            	<thead class="bg-gray-50">
 			                	<tr class="bg-emerald-300">
-			                  		<th class="thPanel w-2/16">
-											<div class="w-8 h-8 border-4 border-slate-500" @click="toggleChkAll()">
-												<div v-if="isChkAllMode == 1">
-													<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="30px" viewBox="-20 50 405.272 405.272" style="enable-background:new -20 50 405.272 405.272;"
-														 xml:space="preserve">
-														<g style="fill:#4338ca;stroke:#4338ca;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-															<path d="M393.401,124.425L179.603,338.208c-15.832,15.835-41.514,15.835-57.361,0L11.878,227.836
-																c-15.838-15.835-15.838-41.52,0-57.358c15.841-15.841,41.521-15.841,57.355-0.006l81.698,81.699L336.037,67.064
-																c15.841-15.841,41.523-15.829,57.358,0C409.23,82.902,409.23,108.578,393.401,124.425z"/>
-														</g>
-													</svg>
-												</div>
-												<div v-if="isChkAllMode == 0">
-													<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 455 455" style="enable-background:new 0 0 455 455;" xml:space="preserve">
-														<g style="fill:#4338ca;stroke:#4338ca;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-														<rect y="212.5" width="455" height="30"/>
-														</g>
-													</svg>	
-												</div>
-											</div>	
+			                  		<th class="thPanel w-2/16 pl-4">
+										<div class="w-8 h-8 border-4 border-slate-500" @click="toggleChkAll()">
+											<div v-if="isChkAllMode == 1">
+												<IconCheck class="w-7 h-7 text-green-400 font-bold" />
+											</div>
+											<div v-if="isChkAllMode == 0">
+												<IconDash class="w-7 h-7 text-green-400 font-bold" />
+											</div>
+										</div>	
 			                  		</th>
 			                  		<th scope="col" class="thPanel w-2/5">
 			                    	公告標題
@@ -344,31 +342,16 @@
 										<div class="w-full h-full flex flex-row justify-evenly pt-2">
 											<div class="w-8 h-8 border-4 border-slate-500 mr-4" @click.stop.prevent="setChkList(record.mainID)">
 												<div v-if="record.isChecked==1">
-													<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="30px" viewBox="-20 50 405.272 405.272" style="enable-background:new -20 50 405.272 405.272;"
-														 xml:space="preserve">
-														<g style="fill:#4338ca;stroke:#4338ca;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-															<path d="M393.401,124.425L179.603,338.208c-15.832,15.835-41.514,15.835-57.361,0L11.878,227.836
-																c-15.838-15.835-15.838-41.52,0-57.358c15.841-15.841,41.521-15.841,57.355-0.006l81.698,81.699L336.037,67.064
-																c15.841-15.841,41.523-15.829,57.358,0C409.23,82.902,409.23,108.578,393.401,124.425z"/>
-														</g>
-													</svg>
+													<IconCheck class="w-7 h-7 text-orange-400 font-bold" />
 												</div>
 											</div>
 											<div class="w-8 h-8" @click="setBM(record.mainID)">
 												<div v-if="record.bookmark=='0'">
-													<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="40px" height="40px" viewBox="0 0 73.317 73.317" style="enable-background:new 0 0 73.317 73.317;" xml:space="preserve">
-														<g style="fill:#FFF;stroke:#666;stroke-width:5px;stroke-linecap:round;stroke-linejoin:round;">
-															<polygon points="26.934,1.318 35.256,18.182 53.867,20.887 40.4,34.013 43.579,52.549 26.934,43.798 10.288,52.549 13.467,34.013 0,20.887 18.611,18.182 "/>
-														</g>
-													</svg>
+													<IconStar class="w-7 h-7 text-orange-400 font-bold" />
 												</div>	
 												<div v-else>
-													<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="30px" viewBox="-10 -10 67.94 67.94" style="enable-background:new -10 -10 67.94 67.94;" xml:space="preserve">
-														<g style="fill:#FF9933;stroke:#FF9933;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">	 
-															<polygon points="26.934,1.318 35.256,18.182 53.867,20.887 40.4,34.013 43.579,52.549 26.934,43.798 10.288,52.549 13.467,34.013 0,20.887 18.611,18.182 "/>						
-														</g>
-													</svg>
-												</div>					
+													<IconStarFill class="w-7 h-7 text-green-400 font-bold" />
+												</div>
 											</div>
 										</div>	
 									</td>
@@ -403,32 +386,25 @@
         		<div class="w-5/7 h-8 text-2xl text-center">公告查詢</div>
         		<div class="w-2/7 h-8 flex flex-row justify-between">
 		            <div class="w-8 h-8 top-2 right-2 bg-white cursor-pointer" @click.prevent="toggleFilter()">
-			            <svg
-			                class="w-6 h-6 float-left"
-			                viewBox="0 0 24 24"
-			                xmlns="http://www.w3.org/2000/svg"
-			              >
-			              	<g style="fill:#b91c1c;stroke:#b91c1c;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round;">
-			                	<path d="M6 18L18 6M6 6l12 12" />
-			            	</g>
-			            </svg>              
+		            	<IconX class="w-7 h-7 text-red-400 font-bold" />
 		            </div>          			
         		</div>
         	</div>
         	<div class="w-full h-full bg-slate-100">
         		<FormKit 
         			form-class="mt-4 ml-4 px-4 py-2 bg-yellow-200 rounded-2xl w-11/12"
-        			v-model="filters"
         			type="form"
         			:form-class="submitted? 'hidden': 'block'"
         			submit-label="查詢"
-        			@submit="fetchData()"
+        			@submit="runFilter()"
         		>
 			        <FormKit
 			          form-class="w-full "
 			          name="shortItems"
 			          label="標題"
 			          type="text"
+			          v-model="filters.shortItems"
+			          value=""
 			          placeholder="輸入公告標題"
 			          help="可輸入部份文字"
 			        />
@@ -437,24 +413,31 @@
 				          name="startDate"
 				          label="起始日"
 				          type="date"
+				          v-model="filters.startDate"
 				        />
 				        <FormKit
 				          name="endDate"
 				          label="結束日"
 				          type="date"
+				          v-model="filters.endDate"
 				        />				        	
 			        </div>
 			        <FormKit
+			          outer-class="relative"
 			          name="itemTypeID"
 			          label="公告類別"
 			          type="liwaDrop"
+			          v-model="filters.itemTypeID"
 			          help="請選擇公告類別"
+			          :sVal="itemType"
+			          :arrOption="liwaDetail1"
 			        />
 			        <FormKit
 			          name="status"
 			          label="上架狀態"
-			          type="liwaDrop"
-			          :options="rolesOption"
+			          type="select"
+			          v-model="filters.status"
+			          :options="statusOption"
 			          help="請選擇上架狀態"
 			        />
         		</FormKit>

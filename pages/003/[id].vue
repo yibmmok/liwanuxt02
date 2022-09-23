@@ -8,6 +8,7 @@
 	import banner from "../../components/banner"
 	import liwaMsg from "../../components/liwaMsg.vue"
 	import liwaConfig from "../../components/liwaConfig.vue"
+	import { IconPlusLg, IconTrash, IconX } from '@iconify-prerendered/vue-bi'
 
 	const mainID = ref('')
 	const progName = ref('使用者群組列表')
@@ -235,27 +236,15 @@
 <div v-if="error">{{ error }}</div>
 <div class="w-full bg-slate-300 px-4 py-2">
 	<div class="barPanel h-12 rounded-3xl ml-4 mb-2 px-1 flex flex-row justify-between">
-		<div class="w-1/3 h-12">
-			<div class="top-icon add ml-2 -mt-1" @click="">
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="#fee" viewBox="-1 -1 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke="#fee" stroke-linejoin="round" stroke-width="6" d="M12 4v16m8-8H4" />
-				</svg>
-			</div>
-		</div>
-		<div class="w-1/3 h-12 text-center">{{ stitle }}</div>
-		<div class="w-1/3 h-12"></div>
+		<div class="w-full h-12 text-center">{{ stitle }}</div>
 	</div>
 	<div v-if="liwaData.length" class="w-full lg:max-w-4xl lg:mx-auto my-0 p-2 border-2 relative">
 		<div class="barPanel w-full h-12 rounded-3xl mt-2 mb-2 px-1 flex flex-row justify-between">
 			<div class="w-1/3 h-12">
-				<div class="top-icon Dadd ml-2 -mt-1 mr-4 bg-white"
+				<div class="top-icon Dadd ml-2 -mt-1 mr-4 pl-[.125rem] pt-[.125rem] bg-white"
                  @click="addD1()"
             	>
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="-1 -1 24 24">
-						<g style="fill:#000;stroke:#000;stroke-width:6px;stroke-linecap:round;stroke-linejoin:round;">
-							<path d="M12 4v16m8-8H4" />
-						</g>
-					</svg>            		
+            		<IconPlusLg class="w-7 h-7 text-slate-400 font-bold" />	
             	</div>
 			</div>
 			<div class="w-1/3 h-12 text-center">程式列表及設定</div>
@@ -288,14 +277,7 @@
 												{{ prog.iAuth }}
 											</div>
 											<div class="w-1/4 pl-4 relative" @click="delD1(prog.LMID)">
-												<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 458.5 458.5" style="enable-background:new 0 0 458.5 458.5;" xml:space="preserve" width="30px" height="30px">
-													<g class="" style="fill:#F33;stroke:#F33;stroke-width:12px;stroke-linecap:round;stroke-linejoin:round;">
-														<path d="M382.078,57.069h-89.78C289.128,25.075,262.064,0,229.249,0S169.37,25.075,166.2,57.069H76.421c-26.938,0-48.854,21.916-48.854,48.854c0,26.125,20.613,47.524,46.429,48.793V399.5c0,32.533,26.467,59,59,59h192.508c32.533,0,59-26.467,59-59V154.717c25.816-1.269,46.429-22.668,46.429-48.793C430.933,78.985,409.017,57.069,382.078,57.069z M229.249,30c16.244,0,29.807,11.673,32.76,27.069h-65.52C199.442,41.673,213.005,30,229.249,30z M354.503,399.501c0,15.991-13.009,29-29,29H132.995c-15.991,0-29-13.009-29-29V154.778c12.244,0,240.932,0,250.508,0V399.501z M382.078,124.778c-3.127,0-302.998,0-305.657,0c-10.396,0-18.854-8.458-18.854-18.854S66.025,87.07,76.421,87.07h305.657c10.396,0,18.854,8.458,18.854,18.854S392.475,124.778,382.078,124.778z"/>
-														<path d="M229.249,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.715-15-15-15c-8.284,0-15,6.716-15,15v173.705	C214.249,385.607,220.965,392.323,229.249,392.323z"/>
-														<path d="M306.671,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.716-15-15-15s-15,6.716-15,15v173.705	C291.671,385.607,298.387,392.323,306.671,392.323z"/>
-														<path d="M151.828,392.323c8.284,0,15-6.716,15-15V203.618c0-8.284-6.716-15-15-15c-8.284,0-15,6.716-15,15v173.705	C136.828,385.607,143.544,392.323,151.828,392.323z"/>
-													</g>
-												</svg>
+												<IconTrash class="w-8 h-8 text-red-400 font-bold" />
 											</div>
 										</div>
 									</td>
@@ -343,25 +325,11 @@
 													@click="saveD1"
 												></FormKit>
 												<div class="w-20 h-20 bg-transparent absolute left-24 -bottom-11"
+												@click.prevent.stop="closeBox(prog.progID)"
 												>
-													<svg
-													  class="w-6 h-6 float-left"
-													  fill="red"
-													  stroke="red"
-													  viewBox="0 0 24 24"
-													  xmlns="http://www.w3.org/2000/svg"
-													  @click.prevent.stop="closeBox(prog.progID)"
-													>
-														<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="5"
-														d="M6 18L18 6M6 6l12 12"
-														></path>
-													</svg>					
+													<IconX class="w-7 h-7 text-red-400 font-bold" />
 												</div>			
 											</div>
-
 										</div>
 									</div>
 								</tr>
