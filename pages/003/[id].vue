@@ -22,7 +22,7 @@
 	const stitle = ref('')
 	const submitted = ref(false)
 	const liwaSel1 = ref([])
-	const action = ref('')
+	const action = ref('view')
 	const actvKeyID = ref('')
 	const actvProgName = ref('')
 	const actvAuth = ref(1)
@@ -42,7 +42,6 @@
 		detailName.value = data.data.value.uGroupName
 		liwaData.value = data.data.value.arrSQL
 	// console.log('liwaData =', liwaData.value)
-		liwaData.value.action = 'edit'
 		liwaData.value.mainID = mainID.value
 		liwaData.value.siteID = window.sessionStorage.getItem('liwaSiteID')
 		liwaData.value.userID = window.sessionStorage.getItem('liwaUserID')
@@ -74,7 +73,6 @@
 		actvAuth.value = res[0].iAuth
 		actvProgName.value = res[0].progName
 		liwaChild.value.LMID = res[0].LMID
-		action.value = 'edit'
 	}
 
 	const addD1 = () => {
@@ -110,6 +108,7 @@
 
 	const saveD1 = async () => {
 		liwaChild.value.iAuth = actvAuth.value
+		if (action.value == 'view') action.value = 'edit'
 		liwaChild.value.action = action.value
 		let actvLMID = liwaChild.value.LMID
 		let datastr = JSON.stringify(liwaChild.value)
@@ -139,14 +138,17 @@
 	    	liwaData.value[actvIndex.value].progID = liwaChild.value.progID
 	    	liwaData.value[actvIndex.value].progName = liwaChild.value.progName
 	    	liwaData.value[actvIndex.value].slink = liwaChild.value.slink
-	    	// window.location.href = '/003/' + mainID.value
+	    	// 關閉 editBox
+	    	bEditBox.value = 0
+			liwaData.value[actvIndex.value].isShow = '0'
+		console.log('liwaData = ', liwaData.value)    	
 	    } else {
 	    	// 先關閉 editBox
 	    	bEditBox.value = 0
 			liwaData.value[actvIndex.value].isShow = '0'
 			showMsg('存檔錯誤', data.value.message, 1)
 	    } 
-	    action.value = ''  		
+	    action.value = 'view'  		
 	}
 
 	const delD1 = async (sID) => {
@@ -171,7 +173,7 @@
 	    	// 顯示錯誤訊息
 			showMsg('刪除錯誤', data.value.message, 1)
 	    } 
-	    action.value = ''  	    
+	    action.value = 'view'  	    
 	}
 
 	const nuProgName = computed(() => {

@@ -9,6 +9,7 @@
 	const actvIdx = ref('')
 
 	const liwaData = ref({})
+	const APIsvr = ref('')
 
 	const toggleChecked = () => {
 		isChecked.value = !isChecked.value
@@ -25,7 +26,7 @@
 		const jwtTime = ref(arrOldJWT.exp)	// JWT 到期時間
 
 		if (timestamp.value > jwtTime.value) {
-			let url = `http://localhost:8102/sys_haveJWT.php?token=${oldJWT.value}`;
+			let url = `${APIsvr.value}/sys_haveJWT.php?token=${oldJWT.value}`;
 			const data = await useFetch(url, {method: 'GET'}).get().json()
 			window.localStorage.setItem('liwaJWT', data.data.value.token)
 		} 
@@ -59,6 +60,7 @@
 	}
 
     onMounted(() => {
+    	APIsvr.value = window.sessionStorage.getItem('liwaAPIsvr')
     	let compName = window.sessionStorage.getItem('liwaSiteName')
     	const title = useTitle(compName+`- 表單庫`)
     	// liwaJWT 已存在, 先檢查liwaJWT是否過期, 若過期, 先重設, 並回傳新的JWT

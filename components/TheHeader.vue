@@ -2,6 +2,7 @@
 	import { ref, onMounted, computed } from 'vue'
 	import { useFetch, useStorage, useSessionStorage } from "@vueuse/core"
 	import jwtDecode from "jwt-decode"
+	import jsonData from "../static/init.json"
 
 	// const { $rmallSessionStorage } = useNuxtApp()
 	const bLogin = ref(false)
@@ -12,6 +13,8 @@
 	const siteName = ref('')
 	const siteIcon = ref('../static/logo_square.png')
 	const userIcon = ref('')
+	const arrjson = ref([])
+	const APIsvr = ref('')
 
 	const route = useRoute() // Nuxt 3 native function
 
@@ -34,7 +37,7 @@
 			window.sessionStorage.setItem('liwaUserName', "")
 			window.sessionStorage.setItem('liwaUserIconPath', "")
 			window.sessionStorage.setItem('liwaImgsvr', "")
-			window.sessionStorage.setItem('liwaAPIsvr', "")
+			// window.sessionStorage.setItem('liwaAPIsvr', "")
 			window.localStorage.setItem('liwaJWT', '')
 			window.location.href="/"
 		}		
@@ -54,6 +57,12 @@
 	})
 	
 	onMounted(() => {
+		// 先檢查 APIsvr是否存在? 若不存在, 從init.json取得
+	    let sAPIsvr = window.sessionStorage.getItem('liwaAPIsvr')
+	    if ((sAPIsvr == undefined) || (sAPIsvr == "") || (sAPIsvr == null)) {
+	      APIsvr.value = jsonData[0].APIsvr
+	      window.sessionStorage.setItem('liwaAPIsvr', APIsvr.value)  
+	    }
 		// 檢查是否已登入?(sessionStorage(liwa_JWT))	
     	let sJWT = window.localStorage.getItem('liwaJWT')
     	siteID.value = window.sessionStorage.getItem('liwaSiteID')
@@ -78,8 +87,8 @@
 	    		useStorage('liwaAuth', arrJWT.auth, sessionStorage)
 	    		useStorage('liwaUGroupID', arrJWT.uGroupID, sessionStorage)
 	    		useStorage('liwaUGroupName', arrJWT.uGroupName, sessionStorage)
+	    		useStorage('liwaAPIsvr', arrJWT.APIsvr, sessionStorage)
 	    		useStorage('liwaImgsvr', arrJWT.imgsvr, sessionStorage)
-	    		useStorage('liwaAPIsvr', arrJWT.apisvr, sessionStorage)
 	    		userIcon.value = arrJWT.iconPath
 	    		if (arrJWT.siteID !== 'sys') {
 	    			siteIcon.value = arrJWT.imgsvr + arrJWT.siteIcon

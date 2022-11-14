@@ -18,7 +18,7 @@
 		liwaData.value.jwttoken = ((jwt.value === 'undefined') || (jwt.value === ""))? '' : jwt.value
 		let datastr = JSON.stringify(liwaData.value)
 		const useMyFetch = createFetch({
-		  baseUrl: 'http://172.18.2.13',
+		  baseUrl: 'http://172.18.2.5',
 		  options: {},
 		  fetchOptions: {
 		    mode: 'cors',
